@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <link rel="stylesheet" href="styles.css?v=2.1">
+  <link rel="stylesheet" href="styles.css?v=2.2">
 </head>
 <body>
   <div class="mobile-wrapper">
@@ -49,37 +49,11 @@
         <!-- Date Input -->
         <div class="form-group">
           <label for="input-date" class="form-label">
-            <i class="fa-regular fa-calendar"></i> Shift Date
+            <i class="fa-regular fa-calendar"></i> Date
           </label>
           <div class="input-control">
             <i class="fa-regular fa-calendar-days input-icon"></i>
             <input type="date" id="input-date" required>
-          </div>
-        </div>
-
-        <!-- Shift Time Range (From - To) -->
-        <div class="form-group">
-          <label class="form-label">
-            <i class="fa-regular fa-clock"></i> Shift Time (From — To)
-          </label>
-          <div class="time-range-row">
-            <div class="time-field flex-1">
-              <span class="field-hint">From</span>
-              <div class="input-control">
-                <i class="fa-regular fa-clock input-icon"></i>
-                <input type="time" id="input-time-start" required>
-              </div>
-            </div>
-            <div class="time-arrow">
-              <i class="fa-solid fa-arrow-right"></i>
-            </div>
-            <div class="time-field flex-1">
-              <span class="field-hint">To</span>
-              <div class="input-control">
-                <i class="fa-solid fa-hourglass-end input-icon"></i>
-                <input type="time" id="input-time-end" required>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -135,6 +109,6 @@
     <div id="toast" class="toast hidden"></div>
   </div>
 
-  <script src="app.js?v=2.1"></script>
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>

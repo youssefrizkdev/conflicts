@@ -21,8 +21,6 @@ const state = {
 const elements = {
   form: document.getElementById('conflict-form'),
   inputDate: document.getElementById('input-date'),
-  inputTimeStart: document.getElementById('input-time-start'),
-  inputTimeEnd: document.getElementById('input-time-end'),
   btnRefresh: document.getElementById('btn-refresh'),
   refreshIcon: document.getElementById('refresh-icon'),
   statusBar: document.getElementById('status-bar'),
@@ -56,13 +54,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Set default date to today and default times
+ * Set default date to today
  */
 function setDefaultDates() {
   const today = new Date();
   elements.inputDate.value = formatDateYMD(today);
-  elements.inputTimeStart.value = "09:00";
-  elements.inputTimeEnd.value = "17:00";
 }
 
 /**
@@ -85,9 +81,17 @@ function attachEventListeners() {
     checkConflicts();
   });
 
+  // Date selection change
+  elements.inputDate.addEventListener('change', () => {
+    checkConflicts();
+  });
+
   // Manual refresh button
   elements.btnRefresh.addEventListener('click', async () => {
     await syncDataFromCharter(true);
+    if (elements.inputDate.value) {
+      checkConflicts();
+    }
   });
 }
 
@@ -284,27 +288,13 @@ function getEventTimeBounds(event) {
 }
 
 /**
- * Main Conflict Checking Logic (All family events by default)
+ * Main Conflict Checking Logic (Conflict based on date only)
  */
 function checkConflicts() {
   const targetDate = elements.inputDate.value;
-  const timeStartStr = elements.inputTimeStart.value;
-  const timeEndStr = elements.inputTimeEnd.value;
 
   if (!targetDate) {
     showToast('Please select a date');
-    return;
-  }
-  if (!timeStartStr || !timeEndStr) {
-    showToast('Please specify shift start and end times');
-    return;
-  }
-
-  const shiftStartMin = parseTimeToMinutes(timeStartStr);
-  const shiftEndMin = parseTimeToMinutes(timeEndStr, shiftStartMin);
-
-  if (shiftStartMin >= shiftEndMin) {
-    showToast('Shift End time must be after Start time');
     return;
   }
 
@@ -325,57 +315,20 @@ function checkConflicts() {
     }
   });
 
-  const conflicts = [];
-  const sameDayNonConflicts = [];
+  // If there is an event or more on that date, that means there is a possible conflict
+  const conflicts = allEventsOnDate.map(event => ({
+    event,
+    timeInfo: getEventTimeBounds(event)
+  }));
 
-  allEventsOnDate.forEach(event => {
-    const timeInfo = getEventTimeBounds(event);
-    
-    if (!timeInfo.hasTime) {
-      // Event on same day with unknown/unspecified time -> Potential Conflict
-      conflicts.push({
-        event,
-        timeInfo,
-        overlapType: 'UNSCHEDULED',
-        overlapMinutes: 0
-      });
-      return;
-    }
-
-    // Check interval overlap: [shiftStartMin, shiftEndMin] & [timeInfo.start, timeInfo.end]
-    const overlapStart = Math.max(shiftStartMin, timeInfo.start);
-    const overlapEnd = Math.min(shiftEndMin, timeInfo.end);
-
-    if (overlapStart < overlapEnd) {
-      // Direct overlap conflict!
-      const overlapMinutes = overlapEnd - overlapStart;
-      conflicts.push({
-        event,
-        timeInfo,
-        overlapType: 'DIRECT',
-        overlapMinutes
-      });
-    } else {
-      // Same day, but outside shift hours
-      let relation = '';
-      if (timeInfo.end <= shiftStartMin) {
-        const gap = shiftStartMin - timeInfo.end;
-        relation = `Ends ${formatDuration(gap)} before shift`;
-      } else if (timeInfo.start >= shiftEndMin) {
-        const gap = timeInfo.start - shiftEndMin;
-        relation = `Starts ${formatDuration(gap)} after shift`;
-      }
-      sameDayNonConflicts.push({
-        event,
-        timeInfo,
-        relation
-      });
-    }
+  // Sort conflicts chronologically by start time
+  conflicts.sort((a, b) => {
+    const aStart = a.timeInfo.start !== null ? a.timeInfo.start : 9999;
+    const bStart = b.timeInfo.start !== null ? b.timeInfo.start : 9999;
+    return aStart - bStart;
   });
 
-  // Sort conflicts by start time
-  conflicts.sort((a, b) => (a.timeInfo.start || 0) - (b.timeInfo.start || 0));
-  sameDayNonConflicts.sort((a, b) => (a.timeInfo.start || 0) - (b.timeInfo.start || 0));
+  const sameDayNonConflicts = [];
 
   renderResults({
     conflicts,
@@ -386,7 +339,7 @@ function checkConflicts() {
 /**
  * Render Conflict Results to DOM
  */
-function renderResults({ conflicts, sameDayNonConflicts }) {
+function renderResults({ conflicts, sameDayNonConflicts = [] }) {
   elements.resultsArea.classList.remove('hidden');
 
   if (conflicts.length === 0) {
@@ -401,7 +354,7 @@ function renderResults({ conflicts, sameDayNonConflicts }) {
     // Red Banner - Conflicts Found (Shrinked & Simplified)
     elements.resultBanner.className = 'result-banner banner-conflict';
     elements.bannerIcon.className = 'fa-solid fa-triangle-exclamation';
-    elements.bannerTitle.innerText = `${conflicts.length} Conflict${conflicts.length > 1 ? 's' : ''} Detected!`;
+    elements.bannerTitle.innerText = 'Possible Conflict Detected';
 
     elements.conflictsSection.classList.remove('hidden');
     elements.conflictCountBadge.innerText = conflicts.length;
@@ -426,15 +379,11 @@ function renderResults({ conflicts, sameDayNonConflicts }) {
  * Generate HTML for Conflicting Event Card
  */
 function createConflictCardHtml(item) {
-  const { event, timeInfo, overlapType, overlapMinutes } = item;
+  const { event, timeInfo } = item;
   const isOpl = event.isOplShift;
 
   const requesterName = isOpl ? 'Olga' : (event.requester || 'Rita');
   const destination = isOpl ? (event.location || 'OPL Branch') : (event.destination || 'Unspecified');
-
-  const overlapBadge = overlapType === 'DIRECT'
-    ? `<span class="overlap-pill"><i class="fa-solid fa-triangle-exclamation"></i> Overlaps by ${formatDuration(overlapMinutes)}</span>`
-    : `<span class="overlap-pill" style="background:#fffbeb; color:#b45309; border-color:#fde68a;"><i class="fa-solid fa-clock"></i> Time Unspecified</span>`;
 
   const eventTimeText = timeInfo.hasTime
     ? `${timeInfo.displayStart} – ${timeInfo.displayEnd}`
@@ -455,7 +404,6 @@ function createConflictCardHtml(item) {
           <i class="fa-solid fa-user"></i>
           <span>${escapeHtml(requesterName)}</span>
         </div>
-        ${overlapBadge}
       </div>
 
       <div class="event-destination">${escapeHtml(destination)}</div>
@@ -474,7 +422,7 @@ function createConflictCardHtml(item) {
  * Generate HTML for Same Day Non-Conflicting Event Card
  */
 function createSameDayCardHtml(item) {
-  const { event, timeInfo, relation } = item;
+  const { event, timeInfo } = item;
   const isOpl = event.isOplShift;
 
   const requesterName = isOpl ? 'Olga' : (event.requester || 'Rita');
@@ -483,13 +431,6 @@ function createSameDayCardHtml(item) {
   const eventTimeText = timeInfo.hasTime
     ? `${timeInfo.displayStart} – ${timeInfo.displayEnd}`
     : 'Time not specified';
-
-  const relationBadge = relation ? `
-    <span class="relation-pill">
-      <i class="fa-solid fa-timeline"></i>
-      <span>${relation}</span>
-    </span>
-  ` : '';
 
   // Notes/Details
   const notesHtml = event.notes ? `
@@ -506,7 +447,6 @@ function createSameDayCardHtml(item) {
           <i class="fa-solid fa-user"></i>
           <span>${escapeHtml(requesterName)}</span>
         </div>
-        ${relationBadge}
       </div>
 
       <div class="event-destination">${escapeHtml(destination)}</div>
