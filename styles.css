@@ -291,60 +291,169 @@ body {
   box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
-.time-range-row {
+/* ==========================================================================
+   Interactive Calendar
+   ========================================================================== */
+
+.calendar-card {
+  padding: 16px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cal-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.cal-nav-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.cal-nav-btn:active {
+  transform: scale(0.92);
+}
+
+.cal-title-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.time-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.field-hint {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  padding-left: 2px;
-}
-
-.time-arrow {
-  color: var(--text-light);
-  font-size: 14px;
-  padding-top: 18px;
-}
-
-.flex-1 {
-  flex: 1;
-}
-
-/* Submit Button */
-.btn-primary {
-  width: 100%;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-md);
-  font-family: inherit;
+.cal-month-year {
   font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.cal-today-btn {
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 700;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  color: var(--primary);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
   transition: all 0.2s ease;
 }
 
-.btn-primary:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+.cal-today-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.cal-today-btn:active {
+  transform: scale(0.95);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.cal-day {
+  background: transparent;
+  border: none;
+  min-height: 42px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  position: relative;
+  transition: all 0.15s ease;
+  padding: 3px 0;
+}
+
+.cal-day:hover {
+  background-color: var(--bg-hover);
+}
+
+.cal-day:active {
+  transform: scale(0.92);
+}
+
+.cal-day.other-month {
+  color: var(--text-light);
+  opacity: 0.35;
+}
+
+.cal-day.today {
+  border: 1.5px solid var(--primary);
+  font-weight: 800;
+}
+
+.cal-day.selected {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+.cal-day .event-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--danger);
+  margin-top: 2px;
+}
+
+.cal-day.selected .event-dot {
+  background-color: #ffffff;
+}
+
+.selected-date-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+.selected-date-bar i {
+  color: var(--primary);
+  font-size: 14px;
 }
 
 /* ==========================================================================

@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <link rel="stylesheet" href="styles.css?v=2.2">
+  <link rel="stylesheet" href="styles.css?v=2.3">
 </head>
 <body>
   <div class="mobile-wrapper">
@@ -42,73 +42,78 @@
       <span id="event-counts" class="status-counts"></span>
     </div>
 
-    <!-- Main Card -->
+    <!-- Main Content -->
     <main class="main-content">
-      <form id="conflict-form" class="card form-card" novalidate>
-        
-        <!-- Date Input -->
-        <div class="form-group">
-          <label for="input-date" class="form-label">
-            <i class="fa-regular fa-calendar"></i> Date
-          </label>
-          <div class="input-control">
-            <i class="fa-regular fa-calendar-days input-icon"></i>
-            <input type="date" id="input-date" required>
+      <!-- Calendar Card -->
+      <div class="card calendar-card">
+        <!-- Calendar Header -->
+        <div class="calendar-header">
+          <button type="button" id="cal-prev" class="cal-nav-btn" aria-label="Previous Month">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <div class="cal-title-wrapper">
+            <span id="cal-month-year" class="cal-month-year">September 2026</span>
+            <button type="button" id="cal-today-btn" class="cal-today-btn">Today</button>
           </div>
+          <button type="button" id="cal-next" class="cal-nav-btn" aria-label="Next Month">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" id="btn-check" class="btn-primary">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <span>Check for Conflicts</span>
-        </button>
-      </form>
-
-      <!-- Results Area -->
-      <section id="results-area" class="results-area hidden">
-        <!-- Result Summary Banner -->
-        <div id="result-banner" class="result-banner">
-          <div class="banner-icon-box" id="banner-icon-box">
-            <i id="banner-icon" class="fa-solid fa-check"></i>
-          </div>
-          <div class="banner-details">
-            <h2 id="banner-title" class="banner-title">No Conflicts Found</h2>
-            <span id="banner-subtitle" style="display:none;"></span>
-          </div>
+        <!-- Calendar Weekdays -->
+        <div class="calendar-weekdays">
+          <span>Sun</span>
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
         </div>
 
-        <!-- Conflicting Events Section -->
-        <div id="conflicts-section" class="events-group hidden">
-          <div class="section-header">
-            <h3 class="section-title">
-              <i class="fa-solid fa-triangle-exclamation text-danger"></i> Conflicting Events
-            </h3>
-            <span id="conflict-count-badge" class="count-badge badge-danger">0</span>
-          </div>
-          <div id="conflicts-list" class="cards-list">
-            <!-- Dynamically populated via JS -->
-          </div>
+        <!-- Calendar Days Grid -->
+        <div id="calendar-days" class="calendar-days">
+          <!-- Dynamically populated via JS -->
         </div>
 
-        <!-- Other Events on Same Day Section -->
-        <div id="sameday-section" class="events-group hidden">
-          <div class="section-header">
-            <h3 class="section-title">
-              <i class="fa-solid fa-calendar-day text-secondary"></i> Other Events on Same Day
-            </h3>
-            <span id="sameday-count-badge" class="count-badge badge-neutral">0</span>
-          </div>
-          <div id="sameday-list" class="cards-list">
-            <!-- Dynamically populated via JS -->
-          </div>
+        <!-- Selected Date Indicator Bar -->
+        <div id="selected-date-bar" class="selected-date-bar">
+          <i class="fa-regular fa-calendar-check"></i>
+          <span id="selected-date-text">Events for selected date</span>
         </div>
-      </section>
+
+        <!-- Results Area (Under the Calendar) -->
+        <section id="results-area" class="results-area">
+          <!-- Result Summary Banner (No Conflicts Found) -->
+          <div id="result-banner" class="result-banner hidden">
+            <div class="banner-icon-box" id="banner-icon-box">
+              <i id="banner-icon" class="fa-solid fa-check"></i>
+            </div>
+            <div class="banner-details">
+              <h2 id="banner-title" class="banner-title">No Conflicts Found</h2>
+            </div>
+          </div>
+
+          <!-- Conflicting Events Section -->
+          <div id="conflicts-section" class="events-group hidden">
+            <div class="section-header">
+              <h3 class="section-title">
+                <i class="fa-solid fa-triangle-exclamation text-danger"></i> Conflicting Events
+              </h3>
+              <span id="conflict-count-badge" class="count-badge badge-danger">0</span>
+            </div>
+            <div id="conflicts-list" class="cards-list">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
 
     <!-- Toast Notification Container -->
     <div id="toast" class="toast hidden"></div>
   </div>
 
-  <script src="app.js?v=2.2"></script>
+  <script src="app.js?v=2.3"></script>
 </body>
 </html>

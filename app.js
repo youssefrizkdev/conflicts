@@ -14,18 +14,25 @@ const state = {
   rides: [],
   oplShifts: [],
   isLoading: false,
-  lastSync: null
+  lastSync: null,
+  selectedDate: formatDateYMD(new Date()),
+  viewYear: new Date().getFullYear(),
+  viewMonth: new Date().getMonth()
 };
 
 // DOM Elements
 const elements = {
-  form: document.getElementById('conflict-form'),
-  inputDate: document.getElementById('input-date'),
   btnRefresh: document.getElementById('btn-refresh'),
   refreshIcon: document.getElementById('refresh-icon'),
   statusBar: document.getElementById('status-bar'),
   statusText: document.getElementById('status-text'),
   eventCounts: document.getElementById('event-counts'),
+  calPrev: document.getElementById('cal-prev'),
+  calNext: document.getElementById('cal-next'),
+  calMonthYear: document.getElementById('cal-month-year'),
+  calTodayBtn: document.getElementById('cal-today-btn'),
+  calendarDays: document.getElementById('calendar-days'),
+  selectedDateText: document.getElementById('selected-date-text'),
   resultsArea: document.getElementById('results-area'),
   resultBanner: document.getElementById('result-banner'),
   bannerIcon: document.getElementById('banner-icon'),
@@ -33,9 +40,6 @@ const elements = {
   conflictsSection: document.getElementById('conflicts-section'),
   conflictsList: document.getElementById('conflicts-list'),
   conflictCountBadge: document.getElementById('conflict-count-badge'),
-  samedaySection: document.getElementById('sameday-section'),
-  samedayList: document.getElementById('sameday-list'),
-  samedayCountBadge: document.getElementById('sameday-count-badge'),
   toast: document.getElementById('toast')
 };
 
@@ -43,8 +47,9 @@ const elements = {
  * Initialize application
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  setDefaultDates();
   attachEventListeners();
+  renderCalendar();
+  checkConflicts(state.selectedDate);
   
   // Load cached data first for instant display
   loadFromCache();
@@ -52,14 +57,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Fetch fresh data from live database
   await syncDataFromCharter();
 });
-
-/**
- * Set default date to today
- */
-function setDefaultDates() {
-  const today = new Date();
-  elements.inputDate.value = formatDateYMD(today);
-}
 
 /**
  * Format Date object to YYYY-MM-DD
@@ -75,23 +72,47 @@ function formatDateYMD(d) {
  * Attach UI event listeners
  */
 function attachEventListeners() {
-  // Form submission
-  elements.form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    checkConflicts();
+  // Calendar Month Navigation
+  elements.calPrev.addEventListener('click', () => {
+    state.viewMonth--;
+    if (state.viewMonth < 0) {
+      state.viewMonth = 11;
+      state.viewYear--;
+    }
+    renderCalendar();
   });
 
-  // Date selection change
-  elements.inputDate.addEventListener('change', () => {
-    checkConflicts();
+  elements.calNext.addEventListener('click', () => {
+    state.viewMonth++;
+    if (state.viewMonth > 11) {
+      state.viewMonth = 0;
+      state.viewYear++;
+    }
+    renderCalendar();
+  });
+
+  // Today shortcut button
+  elements.calTodayBtn.addEventListener('click', () => {
+    const today = new Date();
+    state.viewYear = today.getFullYear();
+    state.viewMonth = today.getMonth();
+    selectDate(formatDateYMD(today));
+  });
+
+  // Calendar Day Selection (click event delegation)
+  elements.calendarDays.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cal-day');
+    if (!btn) return;
+    const dateStr = btn.getAttribute('data-date');
+    if (!dateStr) return;
+    selectDate(dateStr);
   });
 
   // Manual refresh button
   elements.btnRefresh.addEventListener('click', async () => {
     await syncDataFromCharter(true);
-    if (elements.inputDate.value) {
-      checkConflicts();
-    }
+    renderCalendar();
+    checkConflicts(state.selectedDate);
   });
 }
 
@@ -158,12 +179,17 @@ async function syncDataFromCharter(showNotification = false) {
     
     updateStatus('connected', `Connected to Charter DB`, `${rides.length} rides • ${oplShifts.length} shifts`);
     
+    renderCalendar();
+    checkConflicts(state.selectedDate);
+
     if (showNotification) {
       showToast(`Updated! ${rides.length} rides & ${oplShifts.length} shifts synced.`);
     }
   } catch (err) {
     console.error('Error syncing Charter events:', err);
     updateStatus('error', 'Sync failed. Using cached data.', `${state.rides.length} rides • ${state.oplShifts.length} shifts`);
+    renderCalendar();
+    checkConflicts(state.selectedDate);
     if (showNotification) {
       showToast('Sync failed. Please check internet connection.');
     }
@@ -184,6 +210,8 @@ function loadFromCache() {
       state.rides = JSON.parse(cachedRides);
       state.oplShifts = JSON.parse(cachedShifts);
       updateStatus('connected', 'Loaded from local cache', `${state.rides.length} rides • ${state.oplShifts.length} shifts`);
+      renderCalendar();
+      checkConflicts(state.selectedDate);
     }
   } catch (e) {
     console.warn('Cache load error:', e);
@@ -288,15 +316,121 @@ function getEventTimeBounds(event) {
 }
 
 /**
+ * Check if a date string ("YYYY-MM-DD") has any rides or shifts
+ */
+function hasEventsOnDate(dateStr) {
+  const hasRide = state.rides.some(r => r.date === dateStr);
+  if (hasRide) return true;
+  return state.oplShifts.some(s => s.date === dateStr);
+}
+
+/**
+ * Select a date and update calendar UI + results
+ */
+function selectDate(dateStr) {
+  state.selectedDate = dateStr;
+  const [y, m] = dateStr.split('-').map(Number);
+  if (state.viewYear !== y || state.viewMonth !== (m - 1)) {
+    state.viewYear = y;
+    state.viewMonth = m - 1;
+  }
+  renderCalendar();
+  checkConflicts(dateStr);
+}
+
+/**
+ * Format and update the selected date text banner
+ */
+function updateSelectedDateText(dateStr) {
+  if (!dateStr || !elements.selectedDateText) return;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const options = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
+  elements.selectedDateText.innerText = `Events for ${dateObj.toLocaleDateString('en-US', options)}`;
+}
+
+/**
+ * Render Month Calendar Grid
+ */
+function renderCalendar() {
+  const year = state.viewYear;
+  const month = state.viewMonth;
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  elements.calMonthYear.innerText = `${monthNames[month]} ${year}`;
+
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  const todayStr = formatDateYMD(new Date());
+  const selectedStr = state.selectedDate;
+
+  let html = '';
+
+  // Previous month padding days
+  for (let i = firstDayIndex - 1; i >= 0; i--) {
+    const dayNum = prevMonthDays - i;
+    const prevDate = new Date(year, month - 1, dayNum);
+    const dateStr = formatDateYMD(prevDate);
+    const hasEvents = hasEventsOnDate(dateStr);
+    const isSelected = dateStr === selectedStr;
+    const isToday = dateStr === todayStr;
+
+    html += `
+      <button type="button" class="cal-day other-month ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}" data-date="${dateStr}" aria-label="${dateStr}">
+        <span class="day-number">${dayNum}</span>
+        ${hasEvents ? '<span class="event-dot"></span>' : ''}
+      </button>
+    `;
+  }
+
+  // Current month days
+  for (let day = 1; day <= totalDays; day++) {
+    const currDate = new Date(year, month, day);
+    const dateStr = formatDateYMD(currDate);
+    const hasEvents = hasEventsOnDate(dateStr);
+    const isSelected = dateStr === selectedStr;
+    const isToday = dateStr === todayStr;
+
+    html += `
+      <button type="button" class="cal-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}" data-date="${dateStr}" aria-label="${dateStr}">
+        <span class="day-number">${day}</span>
+        ${hasEvents ? '<span class="event-dot"></span>' : ''}
+      </button>
+    `;
+  }
+
+  // Next month padding days to complete 7-column grid
+  const totalRendered = firstDayIndex + totalDays;
+  const remainingCells = (totalRendered % 7 === 0) ? 0 : 7 - (totalRendered % 7);
+  for (let day = 1; day <= remainingCells; day++) {
+    const nextDate = new Date(year, month + 1, day);
+    const dateStr = formatDateYMD(nextDate);
+    const hasEvents = hasEventsOnDate(dateStr);
+    const isSelected = dateStr === selectedStr;
+    const isToday = dateStr === todayStr;
+
+    html += `
+      <button type="button" class="cal-day other-month ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}" data-date="${dateStr}" aria-label="${dateStr}">
+        <span class="day-number">${day}</span>
+        ${hasEvents ? '<span class="event-dot"></span>' : ''}
+      </button>
+    `;
+  }
+
+  elements.calendarDays.innerHTML = html;
+  updateSelectedDateText(state.selectedDate);
+}
+
+/**
  * Main Conflict Checking Logic (Conflict based on date only)
  */
-function checkConflicts() {
-  const targetDate = elements.inputDate.value;
-
-  if (!targetDate) {
-    showToast('Please select a date');
-    return;
-  }
+function checkConflicts(targetDate = state.selectedDate) {
+  if (!targetDate) return;
 
   // Collect all events on target date for all family members
   const allEventsOnDate = [];
@@ -328,22 +462,18 @@ function checkConflicts() {
     return aStart - bStart;
   });
 
-  const sameDayNonConflicts = [];
-
-  renderResults({
-    conflicts,
-    sameDayNonConflicts
-  });
+  renderResults({ conflicts });
 }
 
 /**
- * Render Conflict Results to DOM
+ * Render Conflict Results to DOM under the calendar
  */
-function renderResults({ conflicts, sameDayNonConflicts = [] }) {
+function renderResults({ conflicts }) {
   elements.resultsArea.classList.remove('hidden');
 
   if (conflicts.length === 0) {
-    // Green Banner - All Clear (Shrinked & Simplified)
+    // Green Banner - No Conflicts Found
+    elements.resultBanner.classList.remove('hidden');
     elements.resultBanner.className = 'result-banner banner-clear';
     elements.bannerIcon.className = 'fa-solid fa-circle-check';
     elements.bannerTitle.innerText = 'No Conflicts Found';
@@ -351,28 +481,13 @@ function renderResults({ conflicts, sameDayNonConflicts = [] }) {
     elements.conflictsSection.classList.add('hidden');
     elements.conflictsList.innerHTML = '';
   } else {
-    // Red Banner - Conflicts Found (Shrinked & Simplified)
-    elements.resultBanner.className = 'result-banner banner-conflict';
-    elements.bannerIcon.className = 'fa-solid fa-triangle-exclamation';
-    elements.bannerTitle.innerText = 'Possible Conflict Detected';
+    // Hide the banner completely - user asked to remove "Possible Conflict Detected" label
+    elements.resultBanner.classList.add('hidden');
 
     elements.conflictsSection.classList.remove('hidden');
     elements.conflictCountBadge.innerText = conflicts.length;
     elements.conflictsList.innerHTML = conflicts.map(c => createConflictCardHtml(c)).join('');
   }
-
-  // Render Same Day Other Events (if any)
-  if (sameDayNonConflicts.length > 0) {
-    elements.samedaySection.classList.remove('hidden');
-    elements.samedayCountBadge.innerText = sameDayNonConflicts.length;
-    elements.samedayList.innerHTML = sameDayNonConflicts.map(s => createSameDayCardHtml(s)).join('');
-  } else {
-    elements.samedaySection.classList.add('hidden');
-    elements.samedayList.innerHTML = '';
-  }
-
-  // Smooth scroll to results
-  elements.resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 /**
@@ -399,49 +514,6 @@ function createConflictCardHtml(item) {
 
   return `
     <div class="event-card conflict-card">
-      <div class="card-top-row">
-        <div class="requester-tag">
-          <i class="fa-solid fa-user"></i>
-          <span>${escapeHtml(requesterName)}</span>
-        </div>
-      </div>
-
-      <div class="event-destination">${escapeHtml(destination)}</div>
-
-      <div class="event-time-row">
-        <i class="fa-regular fa-clock"></i>
-        <span>${eventTimeText}</span>
-      </div>
-
-      ${notesHtml}
-    </div>
-  `;
-}
-
-/**
- * Generate HTML for Same Day Non-Conflicting Event Card
- */
-function createSameDayCardHtml(item) {
-  const { event, timeInfo } = item;
-  const isOpl = event.isOplShift;
-
-  const requesterName = isOpl ? 'Olga' : (event.requester || 'Rita');
-  const destination = isOpl ? (event.location || 'OPL Branch') : (event.destination || 'Unspecified');
-
-  const eventTimeText = timeInfo.hasTime
-    ? `${timeInfo.displayStart} – ${timeInfo.displayEnd}`
-    : 'Time not specified';
-
-  // Notes/Details
-  const notesHtml = event.notes ? `
-    <div class="notes-box">
-      <i class="fa-regular fa-comment-dots"></i>
-      <span>${escapeHtml(event.notes)}</span>
-    </div>
-  ` : '';
-
-  return `
-    <div class="event-card sameday-card">
       <div class="card-top-row">
         <div class="requester-tag">
           <i class="fa-solid fa-user"></i>
