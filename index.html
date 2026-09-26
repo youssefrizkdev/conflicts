@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#2563eb">
+  <title>Conflicts - Charter Schedule Checker</title>
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="mobile-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-main">
+        <div class="logo-badge">
+          <i class="fa-solid fa-calendar-xmark"></i>
+        </div>
+        <div>
+          <h1 class="app-title">Conflicts</h1>
+          <p class="app-subtitle">Charter Schedule Checker</p>
+        </div>
+      </div>
+      <button id="btn-refresh" class="btn-icon-pill" aria-label="Refresh Data" title="Refresh Live Database">
+        <i class="fa-solid fa-arrows-rotate" id="refresh-icon"></i>
+        <span class="refresh-text">Sync</span>
+      </button>
+    </header>
+
+    <!-- Live Status Banner -->
+    <div id="status-bar" class="status-bar connecting">
+      <div class="status-dot"></div>
+      <span id="status-text" class="status-text">Connecting to Charter DB...</span>
+      <span id="event-counts" class="status-counts"></span>
+    </div>
+
+    <!-- Main Card -->
+    <main class="main-content">
+      <form id="conflict-form" class="card form-card" novalidate>
+        
+        <!-- Date Input -->
+        <div class="form-group">
+          <label for="input-date" class="form-label">
+            <i class="fa-regular fa-calendar"></i> Shift Date
+          </label>
+          <div class="input-control">
+            <i class="fa-regular fa-calendar-days input-icon"></i>
+            <input type="date" id="input-date" required>
+          </div>
+        </div>
+
+        <!-- Shift Time Range (From - To) -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fa-regular fa-clock"></i> Shift Time (From — To)
+          </label>
+          <div class="time-range-row">
+            <div class="time-field flex-1">
+              <span class="field-hint">From</span>
+              <div class="input-control">
+                <i class="fa-regular fa-clock input-icon"></i>
+                <input type="time" id="input-time-start" required>
+              </div>
+            </div>
+            <div class="time-arrow">
+              <i class="fa-solid fa-arrow-right"></i>
+            </div>
+            <div class="time-field flex-1">
+              <span class="field-hint">To</span>
+              <div class="input-control">
+                <i class="fa-solid fa-hourglass-end input-icon"></i>
+                <input type="time" id="input-time-end" required>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btn-check" class="btn-primary">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>Check for Conflicts</span>
+        </button>
+      </form>
+
+      <!-- Results Area -->
+      <section id="results-area" class="results-area hidden">
+        <!-- Result Summary Banner -->
+        <div id="result-banner" class="result-banner">
+          <div class="banner-icon-box" id="banner-icon-box">
+            <i id="banner-icon" class="fa-solid fa-check"></i>
+          </div>
+          <div class="banner-details">
+            <h2 id="banner-title" class="banner-title">No Conflicts Found</h2>
+            <p id="banner-subtitle" class="banner-subtitle">The selected shift window is completely clear.</p>
+          </div>
+        </div>
+
+        <!-- Conflicting Events Section -->
+        <div id="conflicts-section" class="events-group hidden">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i class="fa-solid fa-triangle-exclamation text-danger"></i> Conflicting Events
+            </h3>
+            <span id="conflict-count-badge" class="count-badge badge-danger">0</span>
+          </div>
+          <div id="conflicts-list" class="cards-list">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Other Events on Same Day Section -->
+        <div id="sameday-section" class="events-group hidden">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i class="fa-solid fa-calendar-day text-secondary"></i> Other Events on Same Day
+            </h3>
+            <span id="sameday-count-badge" class="count-badge badge-neutral">0</span>
+          </div>
+          <p class="section-note">These events are on the same date but do not directly overlap with your shift hours.</p>
+          <div id="sameday-list" class="cards-list">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
