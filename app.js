@@ -32,7 +32,6 @@ const elements = {
   resultBanner: document.getElementById('result-banner'),
   bannerIcon: document.getElementById('banner-icon'),
   bannerTitle: document.getElementById('banner-title'),
-  bannerSubtitle: document.getElementById('banner-subtitle'),
   conflictsSection: document.getElementById('conflicts-section'),
   conflictsList: document.getElementById('conflicts-list'),
   conflictCountBadge: document.getElementById('conflict-count-badge'),
@@ -395,7 +394,6 @@ function renderResults({ conflicts, sameDayNonConflicts }) {
     elements.resultBanner.className = 'result-banner banner-clear';
     elements.bannerIcon.className = 'fa-solid fa-circle-check';
     elements.bannerTitle.innerText = 'No Conflicts Found';
-    elements.bannerSubtitle.innerText = 'No overlap with scheduled events.';
     
     elements.conflictsSection.classList.add('hidden');
     elements.conflictsList.innerHTML = '';
@@ -404,7 +402,6 @@ function renderResults({ conflicts, sameDayNonConflicts }) {
     elements.resultBanner.className = 'result-banner banner-conflict';
     elements.bannerIcon.className = 'fa-solid fa-triangle-exclamation';
     elements.bannerTitle.innerText = `${conflicts.length} Conflict${conflicts.length > 1 ? 's' : ''} Detected!`;
-    elements.bannerSubtitle.innerText = 'There is an overlap with scheduled events.';
 
     elements.conflictsSection.classList.remove('hidden');
     elements.conflictCountBadge.innerText = conflicts.length;
