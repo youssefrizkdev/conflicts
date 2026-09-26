@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <link rel="stylesheet" href="styles.css?v=2.3">
+  <link rel="stylesheet" href="styles.css?v=2.4">
 </head>
 <body>
   <div class="mobile-wrapper">
@@ -46,34 +46,37 @@
     <main class="main-content">
       <!-- Calendar Card -->
       <div class="card calendar-card">
-        <!-- Calendar Header -->
-        <div class="calendar-header">
-          <button type="button" id="cal-prev" class="cal-nav-btn" aria-label="Previous Month">
-            <i class="fa-solid fa-chevron-left"></i>
-          </button>
-          <div class="cal-title-wrapper">
-            <span id="cal-month-year" class="cal-month-year">September 2026</span>
-            <button type="button" id="cal-today-btn" class="cal-today-btn">Today</button>
+        <!-- Interactive Calendar View (supports swipe gestures) -->
+        <div id="calendar-view" class="calendar-view">
+          <!-- Calendar Header -->
+          <div class="calendar-header">
+            <button type="button" id="cal-prev" class="cal-nav-btn" aria-label="Previous Month">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="cal-title-wrapper">
+              <span id="cal-month-year" class="cal-month-year">September 2026</span>
+              <button type="button" id="cal-today-btn" class="cal-today-btn">Today</button>
+            </div>
+            <button type="button" id="cal-next" class="cal-nav-btn" aria-label="Next Month">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
           </div>
-          <button type="button" id="cal-next" class="cal-nav-btn" aria-label="Next Month">
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
-        </div>
 
-        <!-- Calendar Weekdays -->
-        <div class="calendar-weekdays">
-          <span>Sun</span>
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span>Sat</span>
-        </div>
+          <!-- Calendar Weekdays -->
+          <div class="calendar-weekdays">
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+          </div>
 
-        <!-- Calendar Days Grid -->
-        <div id="calendar-days" class="calendar-days">
-          <!-- Dynamically populated via JS -->
+          <!-- Calendar Days Grid -->
+          <div id="calendar-days" class="calendar-days">
+            <!-- Dynamically populated via JS -->
+          </div>
         </div>
 
         <!-- Selected Date Indicator Bar -->
@@ -98,7 +101,7 @@
           <div id="conflicts-section" class="events-group hidden">
             <div class="section-header">
               <h3 class="section-title">
-                <i class="fa-solid fa-triangle-exclamation text-danger"></i> Conflicting Events
+                <i class="fa-solid fa-triangle-exclamation text-danger"></i> Possible Conflicting Events
               </h3>
               <span id="conflict-count-badge" class="count-badge badge-danger">0</span>
             </div>
@@ -114,6 +117,6 @@
     <div id="toast" class="toast hidden"></div>
   </div>
 
-  <script src="app.js?v=2.3"></script>
+  <script src="app.js?v=2.4"></script>
 </body>
 </html>

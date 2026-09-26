@@ -299,6 +299,12 @@ body {
   padding: 16px;
 }
 
+.calendar-view {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .calendar-header {
   display: flex;
   align-items: center;
@@ -379,6 +385,9 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   margin-bottom: 16px;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .cal-day {

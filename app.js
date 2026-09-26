@@ -31,6 +31,7 @@ const elements = {
   calNext: document.getElementById('cal-next'),
   calMonthYear: document.getElementById('cal-month-year'),
   calTodayBtn: document.getElementById('cal-today-btn'),
+  calendarView: document.getElementById('calendar-view'),
   calendarDays: document.getElementById('calendar-days'),
   selectedDateText: document.getElementById('selected-date-text'),
   resultsArea: document.getElementById('results-area'),
@@ -59,6 +60,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
+ * Navigate to previous month
+ */
+function goToPrevMonth() {
+  state.viewMonth--;
+  if (state.viewMonth < 0) {
+    state.viewMonth = 11;
+    state.viewYear--;
+  }
+  renderCalendar();
+}
+
+/**
+ * Navigate to next month
+ */
+function goToNextMonth() {
+  state.viewMonth++;
+  if (state.viewMonth > 11) {
+    state.viewMonth = 0;
+    state.viewYear++;
+  }
+  renderCalendar();
+}
+
+/**
  * Format Date object to YYYY-MM-DD
  */
 function formatDateYMD(d) {
@@ -72,24 +97,9 @@ function formatDateYMD(d) {
  * Attach UI event listeners
  */
 function attachEventListeners() {
-  // Calendar Month Navigation
-  elements.calPrev.addEventListener('click', () => {
-    state.viewMonth--;
-    if (state.viewMonth < 0) {
-      state.viewMonth = 11;
-      state.viewYear--;
-    }
-    renderCalendar();
-  });
-
-  elements.calNext.addEventListener('click', () => {
-    state.viewMonth++;
-    if (state.viewMonth > 11) {
-      state.viewMonth = 0;
-      state.viewYear++;
-    }
-    renderCalendar();
-  });
+  // Calendar Month Navigation Buttons
+  elements.calPrev.addEventListener('click', goToPrevMonth);
+  elements.calNext.addEventListener('click', goToNextMonth);
 
   // Today shortcut button
   elements.calTodayBtn.addEventListener('click', () => {
@@ -100,12 +110,85 @@ function attachEventListeners() {
   });
 
   // Calendar Day Selection (click event delegation)
+  let isSwiping = false;
   elements.calendarDays.addEventListener('click', (e) => {
+    if (isSwiping) return;
     const btn = e.target.closest('.cal-day');
     if (!btn) return;
     const dateStr = btn.getAttribute('data-date');
     if (!dateStr) return;
     selectDate(dateStr);
+  });
+
+  // Touch Swipe Gesture for Calendar (Left = Next Month, Right = Prev Month)
+  const calArea = elements.calendarView || elements.calendarDays;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+
+  calArea.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchEndX = touchStartX;
+    touchEndY = touchStartY;
+    isSwiping = false;
+  }, { passive: true });
+
+  calArea.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 1) return;
+    touchEndX = e.touches[0].clientX;
+    touchEndY = e.touches[0].clientY;
+  }, { passive: true });
+
+  calArea.addEventListener('touchend', () => {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    // Minimum swipe threshold: 45px horizontally and predominantly horizontal
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      isSwiping = true;
+      setTimeout(() => { isSwiping = false; }, 120);
+
+      if (deltaX < 0) {
+        // Swiped Left -> Next Month
+        goToNextMonth();
+      } else {
+        // Swiped Right -> Previous Month
+        goToPrevMonth();
+      }
+    }
+  }, { passive: true });
+
+  // Mouse Drag Swipe Gesture for Desktop Browsers
+  let mouseStartX = 0;
+  let mouseStartY = 0;
+  let isMouseDown = false;
+
+  calArea.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    mouseStartX = e.clientX;
+    mouseStartY = e.clientY;
+    isMouseDown = true;
+  });
+
+  window.addEventListener('mouseup', (e) => {
+    if (!isMouseDown) return;
+    isMouseDown = false;
+    const deltaX = e.clientX - mouseStartX;
+    const deltaY = e.clientY - mouseStartY;
+
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      isSwiping = true;
+      setTimeout(() => { isSwiping = false; }, 120);
+
+      if (deltaX < 0) {
+        goToNextMonth();
+      } else {
+        goToPrevMonth();
+      }
+    }
   });
 
   // Manual refresh button
